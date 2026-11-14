@@ -4,12 +4,12 @@ export default function QuestionResult({ item }) {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'correct':
-        return <span className="status-badge status-correct">✓ Correct (+1)</span>;
+        return <span className="status-badge status-correct">Correct · +1</span>;
       case 'wrong':
-        return <span className="status-badge status-wrong">✗ Incorrect (0)</span>;
+        return <span className="status-badge status-wrong">Incorrect · 0</span>;
       case 'needs_review':
       default:
-        return <span className="status-badge status-review">⚠ Needs Review</span>;
+        return <span className="status-badge status-review">Needs review</span>;
     }
   };
 

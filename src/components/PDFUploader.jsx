@@ -48,7 +48,7 @@ export default function PDFUploader({
             style={{ display: 'none' }}
             disabled={disabled}
           />
-          <div className="dropzone-icon">📄</div>
+          <div className="dropzone-icon" aria-hidden="true">PDF</div>
           <p className="dropzone-text">
             <strong>Click to upload</strong> or drag and drop your answer sheet
           </p>
@@ -57,7 +57,7 @@ export default function PDFUploader({
       ) : (
         <div className="file-preview-card">
           <div className="file-info">
-            <span className="file-icon">📑</span>
+            <span className="file-icon" aria-hidden="true">PDF</span>
             <div className="file-details">
               <span className="file-name" title={selectedFile.name}>
                 {selectedFile.name}

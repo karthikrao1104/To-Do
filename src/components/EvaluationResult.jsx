@@ -10,11 +10,11 @@ export default function EvaluationResult({
 
   return (
     <div className="result-container">
-      {/* Student Profile & Actions Header */}
+      {/* Student Details & Actions Header */}
       <div className="result-header">
         <div className="student-badge-info">
-          <div className="student-avatar">🎓</div>
           <div>
+            <span className="student-context">Evaluation result</span>
             <h2 className="student-display-name">{studentName}</h2>
             <p className="student-display-id">ID: {studentId}</p>
           </div>
@@ -80,7 +80,7 @@ export default function EvaluationResult({
         <div className="table-header-title">
           <h3>Question-Wise Detailed Evaluation</h3>
           <span className="table-subtitle">
-            Independently verified by AI examination evaluator & calculated in JavaScript
+            Answer review with scores calculated from the results
           </span>
         </div>
 

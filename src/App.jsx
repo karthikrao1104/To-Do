@@ -86,7 +86,7 @@ export default function App() {
       // 1. In-browser memory extraction with PDF.js
       const extractedText = await extractTextFromPDF(selectedFile);
 
-      setLoadingMessage('AI is independently solving MCQs and verifying answers...');
+      setLoadingMessage('Reviewing answers and calculating the score...');
 
       // 2. Call serverless API with extracted text
       const result = await evaluateAnswerSheet({
@@ -109,18 +109,16 @@ export default function App() {
     <div className="app-wrapper">
       {/* App Header */}
       <header className="app-header">
-        
-        <h1 className="app-title">AI Student Answer Sheet Evaluator</h1>
+        <p className="app-eyebrow">EXAM ASSESSMENT</p>
+        <h1 className="app-title">Answer Sheet Evaluator</h1>
         <p className="app-subtitle">
-          Upload any student MCQ answer-sheet PDF. Our AI independently solves every question,
-          validates actual answers, and produces an instant, calculated scorecard.
+          Upload a multiple-choice answer sheet to review responses and see the calculated score.
         </p>
       </header>
 
       {/* Global Error Banner */}
       {error && (
         <div className="error-banner" role="alert">
-          <span style={{ fontSize: '1.25rem' }}>⚠️</span>
           <span>{error}</span>
         </div>
       )}
