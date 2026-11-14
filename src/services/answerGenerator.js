@@ -55,12 +55,15 @@ export async function getAnswersFromQuestionPaper({ extractedText }) {
   let data;
   try {
     data = await response.json();
-  } catch (err) {
+  } catch {
     throw new Error(`Failed to parse API response (${response.status} ${response.statusText}).`);
   }
 
   if (!response.ok) {
-    throw new Error(data?.error || `Get Answers request failed with status ${response.status}.`);
+    const errorObj = new Error(data?.error || `Get Answers request failed with status ${response.status}.`);
+    errorObj.status = response.status;
+    errorObj.retryAfter = data?.retryAfter;
+    throw errorObj;
   }
 
   if (!data?.results || !Array.isArray(data.results)) {
@@ -71,6 +74,7 @@ export async function getAnswersFromQuestionPaper({ extractedText }) {
 
   return {
     modelUsed: data.modelUsed,
+    providerUsed: data.providerUsed,
     summary: stats,
     results: data.results,
   };

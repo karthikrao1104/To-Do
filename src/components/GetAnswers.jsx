@@ -8,6 +8,7 @@ export default function GetAnswers() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileError, setFileError] = useState('');
   const [error, setError] = useState('');
+  const [retryAfter, setRetryAfter] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [resultsData, setResultsData] = useState(null);
@@ -27,6 +28,7 @@ export default function GetAnswers() {
   const validateAndSetFile = (file) => {
     setFileError('');
     setError('');
+    setRetryAfter(null);
 
     if (!file) return;
 
@@ -80,6 +82,7 @@ export default function GetAnswers() {
     setSelectedFile(null);
     setFileError('');
     setError('');
+    setRetryAfter(null);
     setResultsData(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -89,12 +92,19 @@ export default function GetAnswers() {
   const handleGenerateAgain = () => {
     setResultsData(null);
     setError('');
+    setRetryAfter(null);
     setFileError('');
   };
 
   const handleGenerateAnswers = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+
+    if (isLoading) return; // Prevent duplicate submission
+
     setError('');
+    setRetryAfter(null);
     setFileError('');
 
     if (!selectedFile) {
@@ -108,13 +118,16 @@ export default function GetAnswers() {
 
       const extractedText = await extractTextFromPDF(selectedFile);
 
-      setLoadingMessage('AI is analyzing questions, solving MCQs, and verifying answers...');
+      setLoadingMessage('AI is solving questions with multi-provider fallback (OpenRouter, Gemini, Groq)...');
 
       const response = await getAnswersFromQuestionPaper({ extractedText });
       setResultsData(response);
     } catch (err) {
       console.error('Get Answers Error:', err);
       setError(err.message || 'An unexpected error occurred while generating answers.');
+      if (err.retryAfter) {
+        setRetryAfter(err.retryAfter);
+      }
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
@@ -164,6 +177,9 @@ ${item.explanation || 'None provided.'}
 
     let content = `AI QUESTION PAPER SOLVER - ANSWER KEY\n`;
     content += `Generated on: ${new Date().toLocaleString()}\n`;
+    if (resultsData.providerUsed) {
+      content += `Provider: ${resultsData.providerUsed} (${resultsData.modelUsed || 'Default'})\n`;
+    }
     content += `Total Questions: ${resultsData.summary.totalQuestions} | Solved: ${resultsData.summary.solvedQuestions} | Needs Review: ${resultsData.summary.reviewQuestions}\n`;
     content += `==================================================\n\n`;
 
@@ -196,8 +212,22 @@ ${item.explanation || 'None provided.'}
     <div className="qa-container">
       {/* Global Error Notice */}
       {error && (
-        <div className="error-banner" role="alert">
+        <div className="error-banner" role="alert" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <span>{error}</span>
+          {retryAfter && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem' }}>Estimated cooldown: {retryAfter}s</span>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '0.3rem 0.75rem', fontSize: '0.85rem' }}
+                onClick={handleGenerateAnswers}
+                disabled={isLoading}
+              >
+                Retry Now
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -206,6 +236,26 @@ ${item.explanation || 'None provided.'}
       ) : resultsData ? (
         /* Results Section */
         <div>
+          {/* Active Provider Indicator */}
+          {resultsData.providerUsed && (
+            <div style={{
+              marginBottom: '1rem',
+              fontSize: '0.85rem',
+              color: 'var(--text-muted, #69747d)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              background: '#f8f9fa',
+              padding: '0.5rem 0.85rem',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              width: 'fit-content'
+            }}>
+              <span>Solved via: <strong>{resultsData.providerUsed}</strong></span>
+              {resultsData.modelUsed && <span>({resultsData.modelUsed})</span>}
+            </div>
+          )}
+
           {/* Summary Stats Cards */}
           <div className="qa-results-summary">
             <div className="qa-stat-card qa-stat-total">
@@ -229,28 +279,28 @@ ${item.explanation || 'None provided.'}
               className="qa-btn qa-btn-secondary"
               onClick={handleCopyAll}
             >
-              📋 Copy All Answers
+              Copy All Answers
             </button>
             <button
               type="button"
               className="qa-btn qa-btn-secondary"
               onClick={handleDownload}
             >
-              ⬇️ Download Answer Key
+              Download Answer Key
             </button>
             <button
               type="button"
               className="qa-btn qa-btn-secondary"
               onClick={handleGenerateAgain}
             >
-              🔄 Generate Again
+              Generate Again
             </button>
             <button
               type="button"
               className="qa-btn qa-btn-primary"
               onClick={handleReset}
             >
-              ✨ Reset All
+              Reset All
             </button>
           </div>
 
@@ -274,7 +324,7 @@ ${item.explanation || 'None provided.'}
                         isReview ? 'qa-pill-review' : 'qa-pill-solved'
                       }`}
                     >
-                      {isReview ? '⚠️ Needs Review' : '✓ Solved'}
+                      {isReview ? 'Needs Review' : 'Solved'}
                     </span>
                   </div>
 
@@ -350,7 +400,7 @@ ${item.explanation || 'None provided.'}
                 className="qa-file-input"
                 onChange={handleFileChange}
               />
-              <div className="qa-upload-icon">📄</div>
+              <div className="qa-upload-icon" aria-hidden="true">PDF</div>
               <p className="qa-upload-title">
                 {selectedFile ? 'Replace Question Paper PDF' : 'Select or Drop Question Paper PDF'}
               </p>
@@ -390,7 +440,7 @@ ${item.explanation || 'None provided.'}
               className="btn btn-primary btn-large qa-submit-btn"
               disabled={isLoading || !selectedFile}
             >
-              Generate Answers
+              {isLoading ? 'Solving Question Paper...' : 'Generate Answers'}
             </button>
           </form>
         </div>

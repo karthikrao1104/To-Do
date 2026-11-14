@@ -17,12 +17,14 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState('');
+  const [retryAfter, setRetryAfter] = useState(null);
   const [fileError, setFileError] = useState('');
   const [evaluationResult, setEvaluationResult] = useState(null);
 
   const handleFileSelect = (file) => {
     setFileError('');
     setError('');
+    setRetryAfter(null);
 
     if (!file) return;
 
@@ -50,6 +52,7 @@ export default function App() {
     setStudentId('');
     setSelectedFile(null);
     setError('');
+    setRetryAfter(null);
     setFileError('');
     setEvaluationResult(null);
   };
@@ -57,13 +60,20 @@ export default function App() {
   const handleEvaluateAnother = () => {
     setSelectedFile(null);
     setError('');
+    setRetryAfter(null);
     setFileError('');
     setEvaluationResult(null);
   };
 
   const handleEvaluate = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+
+    if (isLoading) return; // Prevent duplicate submissions
+
     setError('');
+    setRetryAfter(null);
     setFileError('');
 
     // Field Validations
@@ -89,7 +99,7 @@ export default function App() {
       // 1. In-browser memory extraction with PDF.js
       const extractedText = await extractTextFromPDF(selectedFile);
 
-      setLoadingMessage('Reviewing answers and calculating the score...');
+      setLoadingMessage('AI is reviewing answers with multi-provider fallback (OpenRouter, Gemini, Groq)...');
 
       // 2. Call serverless API with extracted text
       const result = await evaluateAnswerSheet({
@@ -102,6 +112,9 @@ export default function App() {
     } catch (err) {
       console.error('Evaluation Error:', err);
       setError(err.message || 'An unexpected error occurred during evaluation.');
+      if (err.retryAfter) {
+        setRetryAfter(err.retryAfter);
+      }
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
@@ -139,7 +152,7 @@ export default function App() {
             }}
             onClick={() => setActiveTab('evaluate')}
           >
-             Evaluate Answer Sheet
+            Evaluate Answer Sheet
           </button>
           <button
             type="button"
@@ -156,7 +169,7 @@ export default function App() {
             }}
             onClick={() => setActiveTab('get-answers')}
           >
-             Get Answers
+            Get Answers
           </button>
         </div>
       </header>
@@ -166,8 +179,22 @@ export default function App() {
         <>
           {/* Global Error Banner */}
           {error && (
-            <div className="error-banner" role="alert">
+            <div className="error-banner" role="alert" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <span>{error}</span>
+              {retryAfter && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.25rem' }}>
+                  <span style={{ fontSize: '0.85rem' }}>Estimated cooldown: {retryAfter}s</span>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: '0.3rem 0.75rem', fontSize: '0.85rem' }}
+                    onClick={handleEvaluate}
+                    disabled={isLoading}
+                  >
+                    Retry Now
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -175,11 +202,31 @@ export default function App() {
           {isLoading ? (
             <Loading message={loadingMessage} />
           ) : evaluationResult ? (
-            <EvaluationResult
-              result={evaluationResult}
-              onReset={handleReset}
-              onEvaluateAnother={handleEvaluateAnother}
-            />
+            <div>
+              {evaluationResult.providerUsed && (
+                <div style={{
+                  marginBottom: '1rem',
+                  fontSize: '0.85rem',
+                  color: 'var(--text-muted, #69747d)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: '#f8f9fa',
+                  padding: '0.5rem 0.85rem',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                  width: 'fit-content'
+                }}>
+                  <span>Evaluated via: <strong>{evaluationResult.providerUsed}</strong></span>
+                  {evaluationResult.modelUsed && <span>({evaluationResult.modelUsed})</span>}
+                </div>
+              )}
+              <EvaluationResult
+                result={evaluationResult}
+                onReset={handleReset}
+                onEvaluateAnother={handleEvaluateAnother}
+              />
+            </div>
           ) : (
             <form onSubmit={handleEvaluate}>
               <StudentForm
@@ -203,7 +250,7 @@ export default function App() {
                 className="btn btn-primary btn-large"
                 disabled={isLoading}
               >
-                Evaluate Answer Sheet
+                {isLoading ? 'Evaluating Answer Sheet...' : 'Evaluate Answer Sheet'}
               </button>
             </form>
           )}
