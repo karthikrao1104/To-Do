@@ -94,8 +94,9 @@ export default async function handler(req, res) {
     const systemPrompt = `You are a strict exam evaluator.
 Given extracted MCQ questions, identify the student's selected answer (e.g. from Answer:) and solve the question to find the actual correct answer option (A, B, C, or D).
 
-Return JSON ONLY in this format:
-{"results":[{"question_number":1,"question":"Short question","student_answer":"A","correct_answer":"B","status":"wrong","feedback":"Brief reason"}]}`;
+Return a JSON object only, with no markdown or additional text, in this format:
+{"results":[{"question_number":1,"question":"Short question","student_answer":"A","correct_answer":"B","status":"wrong","feedback":"Brief reason"}]}
+Keep question and feedback text concise. Use "needs_review" when the answer is unreadable or ambiguous.`;
 
     const userPrompt = `Answer Sheet Text:\n${extractedText}`;
 
@@ -122,7 +123,8 @@ Return JSON ONLY in this format:
               { role: 'user', content: userPrompt },
             ],
             temperature: 0.1,
-            max_tokens: 1500, // Caps excessive output for fast response times
+            response_format: { type: 'json_object' },
+            max_tokens: 4000,
           }),
           signal: controller.signal,
         });
@@ -143,7 +145,10 @@ Return JSON ONLY in this format:
         const parsedResult = extractJSON(rawContent, reasoning);
 
         if (!parsedResult) {
-          lastError = `${currentModel} returned invalid JSON.`;
+          lastError =
+            choice?.finish_reason === 'length'
+              ? `${currentModel} response was truncated.`
+              : `${currentModel} returned invalid JSON.`;
           continue;
         }
 
