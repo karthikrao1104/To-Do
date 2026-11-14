@@ -9,7 +9,7 @@
 const FAST_MODELS = [
   'cohere/north-mini-code:free',
   'liquid/lfm-3-1.7b:free',
-  'nvidia/nemotron-3.5-lightning:free',
+
 ];
 
 const OPENROUTER_URL =

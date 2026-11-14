@@ -109,7 +109,7 @@ export default function App() {
     <div className="app-wrapper">
       {/* App Header */}
       <header className="app-header">
-        <span className="brand-badge">Automated Academic Grading</span>
+        
         <h1 className="app-title">AI Student Answer Sheet Evaluator</h1>
         <p className="app-subtitle">
           Upload any student MCQ answer-sheet PDF. Our AI independently solves every question,
