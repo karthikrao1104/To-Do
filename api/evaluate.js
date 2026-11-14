@@ -6,10 +6,10 @@
  * Handles model fallback, JSON extraction, validation and errors.
  */
 
-const FAST_MODELS = [
+const DEFAULT_FALLBACK_MODELS = [
   'cohere/north-mini-code:free',
   'liquid/lfm-3-1.7b:free',
-
+  'mistral/mistral-7b-instruct:free',
 ];
 
 const OPENROUTER_URL =
@@ -17,6 +17,23 @@ const OPENROUTER_URL =
 
 const MAX_TEXT_LENGTH = 50000;
 const MODEL_TIMEOUT = 18000;
+const MAX_MODEL_ATTEMPTS = 3;
+
+function getModelsToTry() {
+  const configuredModel = process.env.OPENROUTER_MODEL?.trim();
+  const configuredFallbacks = (process.env.OPENROUTER_FALLBACK_MODELS || '')
+    .split(',')
+    .map((model) => model.trim())
+    .filter(Boolean);
+
+  return [
+    ...new Set([
+      configuredModel,
+      ...configuredFallbacks,
+      ...DEFAULT_FALLBACK_MODELS,
+    ].filter(Boolean)),
+  ].slice(0, MAX_MODEL_ATTEMPTS);
+}
 
 /**
  * Extract a valid JSON object or array from AI response text.
@@ -249,15 +266,7 @@ export default async function handler(req, res) {
     }
 
     // Use configured model first, followed by fallback models.
-    const configuredModel =
-      process.env.OPENROUTER_MODEL || FAST_MODELS[0];
-
-    const modelsToTry = [
-      ...new Set([
-        configuredModel,
-        ...FAST_MODELS,
-      ]),
-    ];
+    const modelsToTry = getModelsToTry();
 
     // Strict evaluation instructions.
     const systemPrompt = `
@@ -370,6 +379,45 @@ ${extractedText}
           const errorText = await openRouterResponse
             .text()
             .catch(() => '');
+
+          if (
+            openRouterResponse.status === 402 ||
+            openRouterResponse.status === 429
+          ) {
+            const retryAfter = openRouterResponse.headers.get('retry-after');
+            const error =
+              openRouterResponse.status === 429
+                ? 'OpenRouter rate limit reached. Please wait before trying again.'
+                : 'OpenRouter account limit reached. Check your account credits or usage limits.';
+
+            if (retryAfter) {
+              res.setHeader('Retry-After', retryAfter);
+            }
+
+            console.warn(
+              `${currentModel} returned HTTP ${openRouterResponse.status}; stopping model fallback.`
+            );
+
+            return res.status(openRouterResponse.status).json({
+              success: false,
+              error,
+              retryAfter: retryAfter || undefined,
+            });
+          }
+
+          if (
+            openRouterResponse.status === 401 ||
+            openRouterResponse.status === 403
+          ) {
+            console.error(
+              `OpenRouter rejected credentials with HTTP ${openRouterResponse.status}.`
+            );
+
+            return res.status(502).json({
+              success: false,
+              error: 'OpenRouter rejected the server API key. Check OPENROUTER_API_KEY.',
+            });
+          }
 
           lastError =
             `${currentModel} returned HTTP ${openRouterResponse.status}: ` +

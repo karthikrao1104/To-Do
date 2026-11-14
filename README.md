@@ -63,7 +63,10 @@ Open `.env` and set your OpenRouter API key and preferred model:
 ```env
 OPENROUTER_API_KEY=sk-or-v1-your-openrouter-key-here
 OPENROUTER_MODEL=liquid/lfm-3-1.7b:free
+OPENROUTER_FALLBACK_MODELS=cohere/north-mini-code:free,nvidia/nemotron-3.5-lightning:free
 ```
+
+The configured model is tried first, followed by the comma-separated fallback models. Account quota and rate-limit responses are returned directly; the app does not rotate API keys or retry around those limits.
 
 ### 3. Run the Development Server
 ```bash
@@ -118,5 +121,8 @@ In your Vercel Project Settings:
 3. (Optional) Add:
    - Key: `OPENROUTER_MODEL`
    - Value: `liquid/lfm-3-1.7b:free`
-4. Click **Deploy**.
-5. After deployment, visit your live URL (e.g. `https://your-project.vercel.app`) to evaluate answer sheets securely in production!
+4. (Optional) Add:
+   - Key: `OPENROUTER_FALLBACK_MODELS`
+   - Value: `cohere/north-mini-code:free,nvidia/nemotron-3.5-lightning:free`
+5. Click **Deploy**.
+6. After deployment, visit your live URL (e.g. `https://your-project.vercel.app`) to evaluate answer sheets securely in production!
