@@ -1,0 +1,98 @@
+%PDF-1.4
+1 0 obj
+<<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+  /Type /Pages
+  /Kids [3 0 R]
+  /Count 1
+>>
+endobj
+3 0 obj
+<<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [0 0 612 792]
+  /Resources <<
+    /Font <<
+      /F1 <<
+        /Type /Font
+        /Subtype /Type1
+        /BaseFont /Helvetica
+      >>
+    >>
+  >>
+  /Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+  /Length 780
+>>
+stream
+BT
+/F1 12 Tf
+72 720 Td
+(STUDENT ANSWER SHEET - COMPUTER SCIENCE EXAM) Tj
+0 -30 Td
+(Student Name: Jane Doe) Tj
+0 -20 Td
+(Student ID: STU-2024-001) Tj
+0 -40 Td
+(Question 1: What is Python?) Tj
+0 -18 Td
+(A. Programming language) Tj
+0 -18 Td
+(B. Relational database) Tj
+0 -18 Td
+(C. Operating system) Tj
+0 -18 Td
+(D. Web browser) Tj
+0 -22 Td
+(Answer: A) Tj
+0 -40 Td
+(Question 2: Which protocol is used for secure web browsing?) Tj
+0 -18 Td
+(A. FTP) Tj
+0 -18 Td
+(B. HTTP) Tj
+0 -18 Td
+(C. HTTPS) Tj
+0 -18 Td
+(D. SMTP) Tj
+0 -22 Td
+(Answer: B) Tj
+0 -40 Td
+(Question 3: What does CPU stand for?) Tj
+0 -18 Td
+(A. Central Processing Unit) Tj
+0 -18 Td
+(B. Computer Personal Unit) Tj
+0 -18 Td
+(C. Control Process Utility) Tj
+0 -18 Td
+(D. Central Performance User) Tj
+0 -22 Td
+(Answer: A) Tj
+ET
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000010 00000 n 
+0000000060 00000 n 
+0000000117 00000 n 
+0000000295 00000 n 
+trailer
+<<
+  /Size 5
+  /Root 1 0 R
+>>
+startxref
+1150
+%%EOF
