@@ -622,3 +622,12 @@ body {
     min-width: 760px;
   }
 }
+
+/* Remove graduation hat / avatar pseudo-elements */
+.student-badge-info::before,
+.student-badge-info::after,
+.student-badge-info > div::before,
+.student-badge-info > div::after {
+  content: none !important;
+  display: none !important;
+}
