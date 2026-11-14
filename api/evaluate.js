@@ -9,7 +9,7 @@
 const DEFAULT_FALLBACK_MODELS = [
   'cohere/north-mini-code:free',
   'liquid/lfm-3-1.7b:free',
-  'mistral/mistral-7b-instruct:free',
+  'mistralai/mistral-7b-instruct:free',
 ];
 
 const OPENROUTER_URL =

@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
-import handler from './api/evaluate.js';
+import evaluateHandler from './api/evaluate.js';
+import getAnswersHandler from './api/get-answers.js';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -16,7 +17,12 @@ export default defineConfig(({ mode }) => {
         name: 'local-serverless-api',
         configureServer(server) {
           server.middlewares.use(async (req, res, next) => {
-            if (req.url === '/api/evaluate' || req.url.startsWith('/api/evaluate?')) {
+            const isEvaluate = req.url === '/api/evaluate' || req.url.startsWith('/api/evaluate?');
+            const isGetAnswers = req.url === '/api/get-answers' || req.url.startsWith('/api/get-answers?');
+
+            if (isEvaluate || isGetAnswers) {
+              const activeHandler = isEvaluate ? evaluateHandler : getAnswersHandler;
+
               // Read JSON body for POST request
               let bodyStr = '';
               req.on('data', (chunk) => {
@@ -42,7 +48,7 @@ export default defineConfig(({ mode }) => {
                 };
 
                 try {
-                  await handler(req, res);
+                  await activeHandler(req, res);
                 } catch (err) {
                   console.error('Local handler error:', err);
                   res.statusCode = 500;
